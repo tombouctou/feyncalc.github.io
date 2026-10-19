@@ -1,0 +1,31 @@
+---
+layout: page
+title: Search
+permalink: /search
+search: false
+---
+
+<form action="{{ site.url }}/search">
+  <input id="q" type="search" name="q" placeholder="e.g. Contract, DiracTrace, TID, gamma5" autocomplete="off" spellcheck="false" autofocus />
+</form>
+
+<p id="status"></p>
+
+<ul id="results"></ul>
+
+<p><small>Searches the FeynCalc manual (stable and development), the FeynHelpers
+manual and the example gallery, right here in your browser. Pages whose name
+matches come first, then the paragraphs that mention it. To jump straight to a
+function by name, press <kbd>⌘K</kbd> (<kbd>Ctrl K</kbd>) or <kbd>/</kbd> on any
+page.</small></p>
+
+<script src="{{ site.baseurl }}/sitesearch/search.js"></script>
+<script>
+SiteSearch.mount({
+    input: 'q', status: 'status', results: 'results',
+    sources: [
+        { url: '{{ site.baseurl }}/nav-index.json' },
+        { url: '{{ site.baseurl }}/search-index.json' },
+    ],
+});
+</script>
