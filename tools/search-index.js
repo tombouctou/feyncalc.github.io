@@ -48,17 +48,24 @@ const SITE = [
 	{ url: '/datenschutz', title: 'Privacy (Datenschutz)' },
 ];
 
-// The text of the search index is shown and searched as it stands, so what is
-// not prose goes: the manual's generic heading ("FeynCalc manual (development
-// version)" on every page) and displayed formulas — the output cells, TeX
-// source that is nobody's query. Inline math stays: it is a word of the
-// sentence ("D-dimensional"). Code is kept — the examples are how a function
-// is used.
+// The text of the search index is shown and searched as it stands, so the
+// manual's generic heading ("FeynCalc manual (development version)" on every
+// page) goes. Formulas stay: html.js turns pandoc's math spans into \(…\) and
+// \[…\], the engine matches them however they are spelled (γ^μγ^ν finds
+// \bar{\gamma}^{\mu } \bar{\gamma}^{\nu }) and draws them with KaTeX. Code
+// stays too — the examples are how a function is used.
 const FURNITURE = [
 	/<header id="title-block-header">[\s\S]*?<\/header>/g,
-	/<span\s+class="math display">[\s\S]*?<\/span>/g,
 	/<p>\$\$\$\$<\/p>/g,
 ];
+
+// Except the largest output cells. Past 600 characters the engine shows a
+// formula as cut TeX rather than drawing it, and nobody types a query that only
+// a three-screen expression answers; the 232 displayed formulas over 1000
+// characters (of 12 000) are a quarter of all the TeX in the manuals.
+const HUGE_MATH = 1000;
+const DISPLAY = /<span\s+class="math display">([\s\S]*?)<\/span>/g;
+const dropHuge = (html) => html.replace(DISPLAY, (m, tex) => (tex.length > HUGE_MATH ? '' : m));
 
 // A chunk of text above this size is split into a map of words and the
 // chunks behind it (sitesearch/FORMAT.md, "two tiers").
@@ -105,7 +112,7 @@ function build(book) {
 		// reads nav-index.json first, at the orders below ten).
 		const page = { url, title, order: 10 + book.order, blocks: [] };
 		if (base !== title) page.also = base;
-		for (const b of blocks(body(html, FURNITURE))) {
+		for (const b of blocks(body(dropHuge(html), FURNITURE))) {
 			if (b.text.length < 3) continue;
 			const block = { text: b.text };
 			if (b.anchor) block.anchor = b.anchor;
